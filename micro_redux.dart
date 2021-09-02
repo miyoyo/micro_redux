@@ -43,5 +43,8 @@ class Store<State> {
 
   void dispatch(Action action) => dispatchStream.add(action);
 
-  Future<void> dispose() => _controller.close();
+  Future<void> dispose() async {
+    _actionStream.close();
+    _controller.close();
+  }
 }
