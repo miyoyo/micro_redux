@@ -10,7 +10,7 @@ typedef NextDispatcher = Future<void> Function(dynamic action);
 
 class Store<State> {
   Store(this.reducer,
-      {State initialState,
+      {required State initialState,
       List<Middleware<State>> middleware = const [],
       bool syncStream = false,
       bool distinct = false})
@@ -19,18 +19,18 @@ class Store<State> {
     _chain = [
       for (var i = 0; i < middleware.length; i++)
         (dynamic action) => middleware[i](this, action, _chain[i + 1]),
-      (dynamic action) {
-        final newState = reducer(_state, action);
+      (dynamic action) async {
+        final newState = await reducer(_state, action);
         if (!distinct || newState != _state) _controller.add(_state = newState);
       }
     ];
-    _actionStream.listen(_chain.first);
+    _actionStream.stream.listen(_chain.first);
   }
 
   Reducer<State> reducer;
   State _state;
   State get state => _state;
-  List<NextDispatcher> _chain;
+  late List<NextDispatcher> _chain;
   StreamController<State> _controller;
   Stream<State> get onChange => _controller.stream;
 
