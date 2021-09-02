@@ -1,12 +1,14 @@
 import 'dart:async';
 
 typedef Reducer<State> = Future<State> Function(
-    State currentState, dynamic action);
+    State currentState, Action action);
 
 typedef Middleware<State> = Future<void> Function(
-    Store<State> currentState, dynamic action, NextDispatcher next);
+    Store<State> currentState, Action action, NextDispatcher next);
 
-typedef NextDispatcher = Future<void> Function(dynamic action);
+typedef NextDispatcher = Future<void> Function(Action action);
+
+abstract class Action {}
 
 class Store<State> {
   Store(Reducer<State> reducer,
@@ -16,11 +18,11 @@ class Store<State> {
       bool distinct = false})
       : _state = initialState,
         _controller = StreamController<State>.broadcast(sync: syncStream),
-        _actionStream = StreamController<dynamic>() {
+        _actionStream = StreamController<Action>() {
     _chain = [
       for (var i = 0; i < middleware.length; i++)
-        (dynamic action) => middleware[i](this, action, _chain[i + 1]),
-      (dynamic action) async {
+        (Action action) => middleware[i](this, action, _chain[i + 1]),
+      (Action action) async {
         final newState = await reducer(_state, action);
         if (!distinct || newState != _state) _controller.add(_state = newState);
       }
@@ -36,10 +38,10 @@ class Store<State> {
   StreamController<State> _controller;
   Stream<State> get onChange => _controller.stream;
 
-  StreamController<dynamic> _actionStream;
-  Sink<dynamic> get dispatchStream => _actionStream.sink;
+  StreamController<Action> _actionStream;
+  Sink<Action> get dispatchStream => _actionStream.sink;
 
-  void dispatch(dynamic action) => dispatchStream.add(action);
+  void dispatch(Action action) => dispatchStream.add(action);
 
   Future<void> dispose() => _controller.close();
 }
