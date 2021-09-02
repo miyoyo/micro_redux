@@ -15,7 +15,8 @@ class Store<State> {
       bool syncStream = false,
       bool distinct = false})
       : _state = initialState,
-        _controller = StreamController<State>.broadcast(sync: syncStream) {
+        _controller = StreamController<State>.broadcast(sync: syncStream),
+        _actionStream = StreamController<dynamic>() {
     _chain = [
       for (var i = 0; i < middleware.length; i++)
         (dynamic action) => middleware[i](this, action, _chain[i + 1]),
@@ -35,7 +36,7 @@ class Store<State> {
   StreamController<State> _controller;
   Stream<State> get onChange => _controller.stream;
 
-  StreamController<dynamic> _actionStream = StreamController<dynamic>();
+  StreamController<dynamic> _actionStream;
   Sink<dynamic> get dispatchStream => _actionStream.sink;
 
   void dispatch(dynamic action) => dispatchStream.add(action);
