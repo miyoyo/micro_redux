@@ -4,9 +4,9 @@ import 'dart:async';
 
 /// This is a [Reducer], this function is intended to be
 /// the only one that transforms and return the state.
-/// 
+///
 /// It gets called at the end of the Middleware chain.
-/// 
+///
 /// Compared to the original Redux Reducer, this Reducer
 /// is asynchroneous, simply because I don't believe in
 /// abusing middleware for most async actions, especially
@@ -26,7 +26,7 @@ typedef Reducer<State extends StoreState> = Future<State> Function(
 /// - Edit the Action
 /// - Dispatch other actions
 /// - Not continue the chain
-/// 
+///
 /// This is usually done for things like request modification,
 /// action save and replay, permission-based restrictions...
 typedef Middleware<State extends StoreState> = Future<void> Function(
@@ -72,15 +72,14 @@ abstract class StoreState {
 class Store<State extends StoreState> {
   Store(Reducer<State> reducer,
       {required State initialState,
-      List<Middleware<State>> middleware = const [],
-      bool distinct = false})
+      List<Middleware<State>> middleware = const []})
       : _state = initialState {
     _chain = [
       for (var i = 0; i < middleware.length; i++)
         (Action action) => middleware[i](this, action, _chain[i + 1]),
       (Action action) async {
         final newState = await reducer(_state, action);
-        if (!distinct || newState != _state) {
+        if (newState != _state) {
           _state = newState;
           _controller.add(state);
         }
@@ -89,12 +88,14 @@ class Store<State extends StoreState> {
   }
 
   State _state;
+
   /// Get a copy of the state
   State get state => _state.copyWith() as State;
 
   late List<NextDispatcher> _chain;
 
   StreamController<State> _controller = StreamController<State>.broadcast();
+
   /// Stream emitting [state] changes
   Stream<State> get onChange => _controller.stream;
 
