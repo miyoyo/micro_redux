@@ -9,7 +9,7 @@ typedef Middleware<State> = Future<void> Function(
 typedef NextDispatcher = Future<void> Function(dynamic action);
 
 class Store<State> {
-  Store(this.reducer,
+  Store(Reducer<State> reducer,
       {required State initialState,
       List<Middleware<State>> middleware = const [],
       bool syncStream = false,
@@ -27,15 +27,16 @@ class Store<State> {
     _actionStream.stream.listen(_chain.first);
   }
 
-  Reducer<State> reducer;
   State _state;
   State get state => _state;
+
   late List<NextDispatcher> _chain;
+
   StreamController<State> _controller;
   Stream<State> get onChange => _controller.stream;
 
   StreamController<dynamic> _actionStream = StreamController<dynamic>();
-  Sink<dynamic> get dispatchStream => _actionStream.sink; 
+  Sink<dynamic> get dispatchStream => _actionStream.sink;
 
   void dispatch(dynamic action) => dispatchStream.add(action);
 
