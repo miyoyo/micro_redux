@@ -73,10 +73,8 @@ class Store<State extends StoreState> {
   Store(Reducer<State> reducer,
       {required State initialState,
       List<Middleware<State>> middleware = const [],
-      bool syncStream = false,
       bool distinct = false})
-      : _state = initialState,
-        _controller = StreamController<State>.broadcast(sync: syncStream) {
+      : _state = initialState {
     _chain = [
       for (var i = 0; i < middleware.length; i++)
         (Action action) => middleware[i](this, action, _chain[i + 1]),
@@ -96,7 +94,7 @@ class Store<State extends StoreState> {
 
   late List<NextDispatcher> _chain;
 
-  StreamController<State> _controller;
+  StreamController<State> _controller = StreamController<State>.broadcast();
   /// Stream emitting [state] changes
   Stream<State> get onChange => _controller.stream;
 
